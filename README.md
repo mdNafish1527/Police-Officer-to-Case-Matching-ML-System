@@ -135,6 +135,7 @@ After running `main.py`, you'll find:
 | case_date | string | Date case filed |
 | description_length | int | Case description length |
 
+
 ## Machine Learning Models
 
 ### Models Trained
