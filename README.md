@@ -252,7 +252,7 @@ Edit `src/feature_engineering.py` to:
 
 ## License
 
-MIT License - See LICENSE file for details
+IIT- University Of Dhaka
 
 ## Author
 
