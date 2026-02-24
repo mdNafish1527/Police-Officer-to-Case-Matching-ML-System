@@ -55,7 +55,7 @@ police-case-matching-ml/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/mdNafish1527/police-case-matching-ml.git
+git clone https://github.com/mdNafish1527/Police-Officer-to-Case-Matching-ML-System.git
 cd police-case-matching-ml
 ```
 
