@@ -258,8 +258,7 @@ IIT- University Of Dhaka
 
 ## Author
 
-Created by: Clementine                                                                                                                                             
-            Kazi Zarin Tasnim Arusha
+Created by: Clementine                                                                                                                                                         Kazi Zarin Tasnim Raisa Arusha                                                                                                                         
             Montakim Talukar Dukhu
             Nafish Salehin
 
