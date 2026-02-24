@@ -258,7 +258,10 @@ IIT- University Of Dhaka
 
 ## Author
 
-Created by: mdNafish1527
+Created by: Clementine
+            Kazi Zarin Tasnim Arusha
+            Montakim Talukar Dukhu
+            Nafish Salehin
 
 ## Contributing
 
