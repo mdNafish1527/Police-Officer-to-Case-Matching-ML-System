@@ -56,7 +56,7 @@ police-case-matching-ml/
 
 ```bash
 git clone https://github.com/mdNafish1527/Police-Officer-to-Case-Matching-ML-System.git
-cd police-case-matching-ml
+cd Police-Officer-to-Case-Matching-ML-System
 ```
 
 ### 2. Create virtual environment
