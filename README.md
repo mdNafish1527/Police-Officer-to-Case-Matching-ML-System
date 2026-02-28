@@ -46,6 +46,7 @@ police-case-matching-ml/
 ├── notebooks/
 │   └── analysis.ipynb            # Jupyter notebook for exploration
 ├── main.py                        # Main pipeline execution
+|__ index.html                     #frontend
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
 ```
