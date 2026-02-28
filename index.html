@@ -1,913 +1,1069 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Police Officer Case Matching System</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Police Case Matching System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:        #060910;
-    --surface:   #0d1117;
-    --border:    #1c2a3a;
-    --accent:    #00e5ff;
-    --accent2:   #ff6b35;
-    --warn:      #ffcc00;
-    --green:     #00ff88;
-    --red:       #ff3355;
-    --text:      #c8d8e8;
-    --muted:     #4a6070;
-    --glow:      0 0 20px rgba(0,229,255,0.25);
+    --bg: #040810;
+    --surface: #080f1e;
+    --surface2: #0c1628;
+    --border: rgba(0, 200, 255, 0.12);
+    --border-bright: rgba(0, 200, 255, 0.35);
+    --cyan: #00c8ff;
+    --cyan-dim: rgba(0, 200, 255, 0.15);
+    --amber: #ffb800;
+    --amber-dim: rgba(255, 184, 0, 0.15);
+    --red: #ff3c5a;
+    --red-dim: rgba(255, 60, 90, 0.15);
+    --green: #00e5a0;
+    --green-dim: rgba(0, 229, 160, 0.15);
+    --text: #e8f0fe;
+    --text-dim: #5a7a9a;
+    --text-mid: #8aa8c8;
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
   body {
+    font-family: 'Syne', sans-serif;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Barlow', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* ── SCANLINE OVERLAY ── */
+  /* — SCANLINE OVERLAY — */
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.08) 2px,
-      rgba(0,0,0,0.08) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none; z-index: 9999;
   }
 
-  /* ── GRID BG ── */
-  body::after {
-    content: '';
-    position: fixed; inset: 0;
+  /* — ANIMATED BG GRID — */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
     background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridScroll 20s linear infinite;
   }
+  @keyframes gridScroll { to { background-position: 50px 50px; } }
 
-  /* ── HEADER ── */
+  /* — RADIAL GLOW — */
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    pointer-events: none; z-index: 0;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+  .glow-orb.orb1 { width:600px; height:600px; top:-200px; left:-100px; background: var(--cyan); animation-delay: 0s; }
+  .glow-orb.orb2 { width:500px; height:500px; bottom:-200px; right:-100px; background: #5040ff; animation-delay: -4s; }
+  @keyframes orbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+
+  /* — HEADER — */
   header {
     position: relative; z-index: 10;
+    padding: 20px 40px;
+    display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(0,229,255,0.04) 0%, transparent 100%);
-    padding: 0 2rem;
+    background: rgba(4,8,16,0.8);
+    backdrop-filter: blur(20px);
   }
-
-  .header-inner {
-    max-width: 1300px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 70px;
-  }
-
   .logo {
     display: flex; align-items: center; gap: 14px;
   }
-
   .logo-icon {
-    width: 42px; height: 42px;
-    background: var(--accent);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    width: 40px; height: 40px;
+    border: 2px solid var(--cyan);
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    color: var(--bg);
-    animation: pulse-glow 3s ease-in-out infinite;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,200,255,0.3), inset 0 0 20px rgba(0,200,255,0.05);
+    animation: iconPulse 3s ease-in-out infinite;
   }
+  @keyframes iconPulse { 0%,100%{box-shadow:0 0 20px rgba(0,200,255,0.3), inset 0 0 20px rgba(0,200,255,0.05)} 50%{box-shadow:0 0 40px rgba(0,200,255,0.6), inset 0 0 30px rgba(0,200,255,0.1)} }
+  .logo-icon svg { width:20px; height:20px; color: var(--cyan); }
+  .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 4px; color: var(--cyan); }
+  .logo-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
 
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 10px rgba(0,229,255,0.4); }
-    50%       { box-shadow: 0 0 30px rgba(0,229,255,0.8); }
+  .header-status {
+    display: flex; align-items: center; gap: 30px;
   }
-
-  .logo-text {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1.3rem;
-    letter-spacing: 0.12em;
-    color: #fff;
+  .status-pill {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--text-dim); letter-spacing: 1px;
   }
-
-  .logo-text span { color: var(--accent); }
-
-  .status-bar {
-    display: flex; gap: 20px; align-items: center;
-  }
-
   .status-dot {
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .dot {
-    width: 7px; height: 7px; border-radius: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: var(--green);
-    animation: blink 1.4s ease-in-out infinite;
+    box-shadow: 0 0 10px var(--green);
+    animation: blink 2s ease-in-out infinite;
   }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.2; }
-  }
-
-  /* ── MAIN LAYOUT ── */
-  .wrapper {
+  /* — MAIN LAYOUT — */
+  .app {
     position: relative; z-index: 1;
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 2.5rem 2rem;
+    max-width: 1440px; margin: 0 auto;
+    padding: 40px;
     display: grid;
     grid-template-columns: 380px 1fr;
-    gap: 2rem;
-    align-items: start;
+    grid-template-rows: auto 1fr;
+    gap: 24px;
+    min-height: calc(100vh - 81px);
   }
 
-  /* ── PANEL BASE ── */
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .panel::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.6;
-  }
-
-  .panel-header {
-    padding: 1rem 1.4rem;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 10px;
-    background: rgba(0,229,255,0.02);
-  }
-
-  .panel-header h2 {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    font-size: 0.9rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .panel-icon { font-size: 1rem; }
-
-  /* ── FORM ── */
-  .form-body { padding: 1.4rem; display: flex; flex-direction: column; gap: 1.2rem; }
-
-  .field { display: flex; flex-direction: column; gap: 6px; }
-
-  .field label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .field select,
-  .field input {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    font-size: 0.95rem;
-    padding: 0.6rem 0.9rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    width: 100%;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .select-wrap {
-    position: relative;
-  }
-
-  .select-wrap::after {
-    content: '▾';
-    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-    color: var(--accent);
-    pointer-events: none;
-    font-size: 0.8rem;
-  }
-
-  .field select:focus,
-  .field input:focus {
-    border-color: var(--accent);
-    box-shadow: var(--glow);
-  }
-
-  .field select option { background: #0d1117; }
-
-  /* priority badges */
-  .priority-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .priority-btn {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    color: var(--muted);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    padding: 0.55rem;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.18s;
-    text-transform: uppercase;
-  }
-
-  .priority-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .priority-btn.active.low      { border-color: var(--green);  color: var(--green);  background: rgba(0,255,136,0.07); }
-  .priority-btn.active.medium   { border-color: var(--warn);   color: var(--warn);   background: rgba(255,204,0,0.07); }
-  .priority-btn.active.high     { border-color: var(--accent2);color: var(--accent2);background: rgba(255,107,53,0.07); }
-  .priority-btn.active.critical { border-color: var(--red);    color: var(--red);    background: rgba(255,51,85,0.07); box-shadow: 0 0 12px rgba(255,51,85,0.2); }
-
-  /* submit */
-  .btn-submit {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0.85rem;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-    margin-top: 0.4rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-submit::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: var(--accent);
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    z-index: -1;
-  }
-
-  .btn-submit:hover { color: var(--bg); }
-  .btn-submit:hover::before { transform: translateX(0); }
-
-  .btn-submit:disabled {
-    opacity: 0.4; cursor: not-allowed;
-  }
-  .btn-submit:disabled::before { display: none; }
-  .btn-submit:disabled:hover { color: var(--accent); }
-
-  /* ── RIGHT PANEL ── */
-  .right-col { display: flex; flex-direction: column; gap: 1.5rem; }
-
-  /* ── STATS ROW ── */
+  /* — STATS ROW — */
   .stats-row {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    gap: 16px;
   }
-
   .stat-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1rem 1.2rem;
-    position: relative;
-    overflow: hidden;
+    border-radius: 12px;
+    padding: 20px 24px;
+    position: relative; overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
   }
-
-  .stat-card::after {
+  .stat-card::before {
     content: '';
-    position: absolute; bottom: 0; left: 0; right: 0;
-    height: 2px;
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, var(--cyan));
+    opacity: 0.6;
+  }
+  .stat-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .stat-card:hover::before { opacity: 1; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 1; letter-spacing: 2px; color: var(--accent-color, var(--cyan)); }
+  .stat-change { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--green); margin-top: 4px; }
+  .stat-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); opacity: 0.08; font-size: 48px; }
+
+  /* — SIDEBAR — */
+  .sidebar {
+    display: flex; flex-direction: column; gap: 20px;
   }
 
-  .stat-card.c1::after { background: var(--accent); }
-  .stat-card.c2::after { background: var(--green); }
-  .stat-card.c3::after { background: var(--warn); }
-  .stat-card.c4::after { background: var(--accent2); }
-
-  .stat-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
+  /* — CARD BASE — */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s;
   }
-
-  .stat-value {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1;
+  .card:hover { border-color: var(--border-bright); }
+  .card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
   }
-
-  /* ── RESULTS PANEL ── */
-  .results-panel { flex: 1; }
-
-  .results-body { padding: 1.4rem; }
-
-  /* placeholder */
-  .placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    padding: 4rem 2rem;
-    color: var(--muted);
-    text-align: center;
+  .card-title {
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    color: var(--text-dim); text-transform: uppercase;
   }
+  .card-body { padding: 20px 24px; }
 
-  .placeholder-icon {
-    font-size: 3rem;
-    opacity: 0.3;
+  /* — NEW CASE FORM — */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1.5px;
+    color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
   }
-
-  .placeholder p {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-  }
-
-  /* loading */
-  .loading {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding: 4rem;
-  }
-
-  .loading.active { display: flex; }
-
-  .spinner {
-    width: 48px; height: 48px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading p {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent);
-    letter-spacing: 0.1em;
-    animation: typing 1.5s steps(20) infinite;
-  }
-
-  @keyframes typing {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.4; }
-  }
-
-  /* results */
-  .results-list {
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .results-list.active { display: flex; }
-
-  .case-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 1rem;
-    padding: 8px 14px;
-    background: rgba(0,229,255,0.05);
-    border: 1px solid rgba(0,229,255,0.15);
-    border-radius: 3px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent);
-  }
-
-  .case-badge span { color: var(--muted); }
-
-  .officer-card {
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(0,200,255,0.1);
+  }
+  .form-select option { background: var(--bg); }
+  .form-textarea { resize: none; height: 80px; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .badge {
+    padding: 4px 10px; border-radius: 20px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    user-select: none;
+  }
+  .badge.active { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+  .badge.inactive { background: var(--surface2); border-color: var(--border); color: var(--text-dim); }
+  .badge:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* — URGENCY SLIDER — */
+  .urgency-display {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .urgency-value {
+    font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+    color: var(--cyan);
+  }
+  input[type="range"] {
+    width: 100%; -webkit-appearance: none; height: 4px;
+    background: var(--border); border-radius: 2px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
+    cursor: pointer;
+  }
+
+  /* — MATCH BUTTON — */
+  .match-btn {
+    width: 100%; padding: 14px;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    border-radius: 10px;
+    color: var(--cyan);
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 4px;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: all 0.3s;
+  }
+  .match-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--cyan);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+    z-index: 0;
+  }
+  .match-btn:hover::before { transform: translateX(0); }
+  .match-btn:hover { color: var(--bg); box-shadow: 0 0 30px rgba(0,200,255,0.4); }
+  .match-btn span { position: relative; z-index: 1; }
+  .match-btn.loading { pointer-events: none; opacity: 0.7; }
+
+  /* — MAIN CONTENT — */
+  .main-content { display: flex; flex-direction: column; gap: 20px; }
+
+  /* — RESULTS PANEL — */
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .results-meta {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .tag {
+    padding: 4px 10px; border-radius: 4px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--border-bright);
+  }
+  .tag.urgent { background: var(--red-dim); color: var(--red); border-color: rgba(255,60,90,0.35); }
+  .tag.amber { background: var(--amber-dim); color: var(--amber); border-color: rgba(255,184,0,0.35); }
+
+  /* — OFFICER CARD — */
+  .officer-list { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .officer-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
     display: grid;
-    grid-template-columns: 48px 1fr auto;
-    gap: 1rem;
+    grid-template-columns: 60px 1fr auto;
+    gap: 16px;
     align-items: center;
-    transition: border-color 0.2s, transform 0.2s;
+    transition: all 0.3s;
+    cursor: pointer;
+    position: relative; overflow: hidden;
     animation: slideIn 0.4s ease both;
   }
-
-  .officer-card:hover {
-    border-color: rgba(0,229,255,0.3);
-    transform: translateX(4px);
-  }
-
+  .officer-card:nth-child(1) { animation-delay: 0.05s; }
+  .officer-card:nth-child(2) { animation-delay: 0.1s; }
+  .officer-card:nth-child(3) { animation-delay: 0.15s; }
+  .officer-card:nth-child(4) { animation-delay: 0.2s; }
+  .officer-card:nth-child(5) { animation-delay: 0.25s; }
   @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-16px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
+  .officer-card::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--cyan); opacity: 0; transition: opacity 0.3s;
+  }
+  .officer-card:hover { border-color: var(--border-bright); background: rgba(12, 22, 40, 0.9); transform: translateX(4px); }
+  .officer-card:hover::after { opacity: 1; }
+  .officer-card.rank-1::after { opacity: 1; background: var(--amber); }
+  .officer-card.rank-1 { border-color: rgba(255,184,0,0.25); }
 
-  .officer-card:nth-child(2) { animation-delay: 0.05s; }
-  .officer-card:nth-child(3) { animation-delay: 0.10s; }
-  .officer-card:nth-child(4) { animation-delay: 0.15s; }
-  .officer-card:nth-child(5) { animation-delay: 0.20s; }
-  .officer-card:nth-child(6) { animation-delay: 0.25s; }
-
-  .officer-rank {
-    width: 48px; height: 48px;
-    border-radius: 50%;
+  .officer-avatar {
+    width: 52px; height: 52px; border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1.2rem;
-    flex-shrink: 0;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--cyan);
+    position: relative;
   }
-
-  .rank-1 { background: rgba(255,204,0,0.12);  color: var(--warn);   border: 1px solid rgba(255,204,0,0.3); }
-  .rank-2 { background: rgba(0,229,255,0.08);  color: var(--accent); border: 1px solid rgba(0,229,255,0.2); }
-  .rank-3 { background: rgba(255,107,53,0.08); color: var(--accent2);border: 1px solid rgba(255,107,53,0.2); }
-  .rank-4 { background: rgba(200,216,232,0.05);color: var(--muted);  border: 1px solid var(--border); }
-  .rank-5 { background: rgba(200,216,232,0.05);color: var(--muted);  border: 1px solid var(--border); }
+  .rank-badge {
+    position: absolute; top: -6px; right: -6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--amber); color: var(--bg);
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
 
   .officer-info {}
-
-  .officer-id {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.06em;
-    margin-bottom: 4px;
-  }
-
+  .officer-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
   .officer-meta {
-    display: flex; gap: 14px; flex-wrap: wrap;
+    display: flex; gap: 12px; align-items: center;
+    font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim);
+  }
+  .officer-meta span { display: flex; align-items: center; gap: 4px; }
+  .officer-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .skill-tag {
+    padding: 2px 8px; border-radius: 3px;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.5px;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
   }
 
-  .meta-tag {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted);
+  .officer-score { text-align: right; }
+  .score-number {
+    font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1;
+    background: linear-gradient(135deg, var(--cyan), #5040ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
+  .score-number.high { background: linear-gradient(135deg, var(--amber), #ff6b00); -webkit-background-clip: text; background-clip: text; }
+  .score-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
 
-  .meta-tag strong { color: var(--text); }
-
-  .officer-score-wrap { text-align: right; }
-
-  .score-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.62rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    margin-bottom: 2px;
+  /* — SCORE BAR — */
+  .score-bar-wrap { margin-top: 10px; }
+  .score-bar-track { height: 3px; background: var(--border); border-radius: 2px; }
+  .score-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--cyan), #5040ff);
+    transition: width 1s cubic-bezier(.17,.67,.35,1.2);
   }
+  .score-bar-fill.top { background: linear-gradient(90deg, var(--amber), #ff6b00); }
 
-  .score-value {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .score-high   { color: var(--green); }
-  .score-medium { color: var(--warn); }
-  .score-low    { color: var(--accent2); }
-
-  .score-bar-wrap {
-    width: 60px;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-top: 4px;
-    margin-left: auto;
-  }
-
-  .score-bar {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 1s ease;
-  }
-
-  .score-high-bar   { background: var(--green); }
-  .score-medium-bar { background: var(--warn); }
-  .score-low-bar    { background: var(--accent2); }
-
-  /* avail badge */
-  .avail-badge {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 2px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.08em;
-    margin-left: 8px;
-  }
-
-  .avail-yes { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
-  .avail-no  { background: rgba(255,51,85,0.1);  color: var(--red);   border: 1px solid rgba(255,51,85,0.2); }
-
-  /* ── FOOTER ── */
-  footer {
-    position: relative; z-index: 1;
-    border-top: 1px solid var(--border);
-    padding: 1rem 2rem;
+  /* — MODEL METRICS — */
+  .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 20px 24px; }
+  .metric-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
     text-align: center;
   }
+  .metric-name { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; }
+  .metric-value { font-family: 'Bebas Neue', sans-serif; font-size: 30px; }
+  .metric-value.cyan { color: var(--cyan); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.amber { color: var(--amber); }
 
-  footer p {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
+  /* — MODEL SELECTOR — */
+  .model-selector { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  .model-btn {
+    padding: 6px 14px; border-radius: 6px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+  }
+  .model-btn.active { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+  .model-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* — EMPTY STATE — */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 24px; color: var(--text-dim);
+    gap: 16px;
+  }
+  .empty-icon { font-size: 48px; opacity: 0.3; }
+  .empty-text { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-align: center; }
+
+  /* — ACTIVE CASES TABLE — */
+  .cases-table { width: 100%; border-collapse: collapse; }
+  .cases-table th {
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .cases-table td {
+    padding: 12px 14px; font-size: 12px;
+    border-bottom: 1px solid rgba(0,200,255,0.05);
+    vertical-align: middle;
+  }
+  .cases-table tr:hover td { background: var(--surface2); }
+  .case-status {
+    display: inline-block; padding: 3px 8px; border-radius: 3px;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+  }
+  .case-status.open { background: var(--cyan-dim); color: var(--cyan); }
+  .case-status.active { background: var(--amber-dim); color: var(--amber); }
+  .case-status.solved { background: var(--green-dim); color: var(--green); }
+  .case-status.critical { background: var(--red-dim); color: var(--red); }
+
+  /* — LOADING ANIMATION — */
+  .loading-ring {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* — SCROLLBAR — */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* — RESPONSIVE FIX — */
+  @media (max-width: 1100px) {
+    .app { grid-template-columns: 1fr; padding: 20px; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
   }
 
-  footer span { color: var(--accent); }
+  /* — TABS — */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 14px 20px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .tab:hover { color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
-  /* error */
-  .error-msg {
-    display: none;
-    background: rgba(255,51,85,0.06);
-    border: 1px solid rgba(255,51,85,0.2);
-    border-radius: 3px;
-    padding: 12px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--red);
-    letter-spacing: 0.06em;
+  /* — CHART BARS — */
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; padding: 16px 24px 0; }
+  .chart-bar {
+    flex: 1; border-radius: 4px 4px 0 0;
+    background: var(--cyan-dim); border: 1px solid var(--border-bright);
+    position: relative; transition: all 0.3s;
+    animation: barGrow 0.8s ease both;
+  }
+  .chart-bar:hover { background: var(--cyan); }
+  @keyframes barGrow { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); } }
+  .chart-axis { display: flex; gap: 8px; padding: 4px 24px 12px; border-bottom: 1px solid var(--border); }
+  .chart-axis span { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 8px; color: var(--text-dim); letter-spacing: 1px; }
+
+  /* — TEAM BANNER — */
+  .team-banner {
+    position: relative; z-index: 10;
+    padding: 18px 40px;
+    background: linear-gradient(90deg, rgba(4,8,16,0.95) 0%, rgba(8,15,30,0.95) 50%, rgba(4,8,16,0.95) 100%);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+  .team-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      rgba(255,80,120,0.04) 0%,
+      rgba(255,184,0,0.06) 25%,
+      rgba(0,200,255,0.06) 50%,
+      rgba(80,64,255,0.06) 75%,
+      rgba(0,229,160,0.04) 100%
+    );
+    animation: bannerShimmer 6s ease-in-out infinite alternate;
+  }
+  @keyframes bannerShimmer {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
   }
 
-  .error-msg.active { display: block; }
-
-  /* responsive */
-  @media (max-width: 1000px) {
-    .wrapper { grid-template-columns: 1fr; }
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .team-center {
+    display: flex; align-items: center; gap: 40px;
+    position: relative; z-index: 1;
+    flex-wrap: wrap; justify-content: center;
   }
 
-  @media (max-width: 550px) {
-    .stats-row { grid-template-columns: 1fr 1fr; }
-    .officer-card { grid-template-columns: 40px 1fr; }
-    .officer-score-wrap { display: none; }
+  .team-label-block {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
   }
+  .team-eyebrow {
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px;
+    color: var(--text-dim); text-transform: uppercase;
+  }
+  .team-name-display {
+    font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 6px;
+    background: linear-gradient(90deg, #ff5078, #ffb800, #00c8ff, #a78bfa, #00e5a0);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: nameFlow 4s linear infinite;
+    filter: drop-shadow(0 0 20px rgba(0,200,255,0.3));
+  }
+  @keyframes nameFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  .team-divider {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--border-bright), transparent);
+  }
+
+  .team-members {
+    display: flex; align-items: center; gap: 20px;
+  }
+  .member-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 14px 7px 8px;
+    border-radius: 30px;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    position: relative;
+    cursor: default;
+  }
+  .member-chip:hover { transform: translateY(-2px); }
+  .member-chip:hover .member-avatar { transform: scale(1.1); }
+
+  .member-chip.c1 { border-color: rgba(255,80,120,0.3); background: rgba(255,80,120,0.07); }
+  .member-chip.c1:hover { border-color: rgba(255,80,120,0.7); box-shadow: 0 4px 20px rgba(255,80,120,0.2); }
+  .member-chip.c2 { border-color: rgba(255,184,0,0.3); background: rgba(255,184,0,0.07); }
+  .member-chip.c2:hover { border-color: rgba(255,184,0,0.7); box-shadow: 0 4px 20px rgba(255,184,0,0.2); }
+  .member-chip.c3 { border-color: rgba(0,200,255,0.3); background: rgba(0,200,255,0.07); }
+  .member-chip.c3:hover { border-color: rgba(0,200,255,0.7); box-shadow: 0 4px 20px rgba(0,200,255,0.2); }
+
+  .member-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 13px;
+    font-weight: 700; flex-shrink: 0;
+    transition: transform 0.3s;
+  }
+  .member-chip.c1 .member-avatar { background: rgba(255,80,120,0.2); color: #ff5078; border: 1px solid rgba(255,80,120,0.5); }
+  .member-chip.c2 .member-avatar { background: rgba(255,184,0,0.2); color: #ffb800; border: 1px solid rgba(255,184,0,0.5); }
+  .member-chip.c3 .member-avatar { background: rgba(0,200,255,0.2); color: #00c8ff; border: 1px solid rgba(0,200,255,0.5); }
+
+  .member-name {
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .member-chip.c1 .member-name { color: #ff7a96; }
+  .member-chip.c2 .member-name { color: #ffd060; }
+  .member-chip.c3 .member-name { color: #60d8ff; }
+
+  /* floating particles */
+  .team-banner .particle {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    animation: floatParticle linear infinite;
+    opacity: 0;
+  }
+  @keyframes floatParticle {
+    0%   { transform: translateY(30px) scale(0); opacity: 0; }
+    20%  { opacity: 0.6; }
+    80%  { opacity: 0.3; }
+    100% { transform: translateY(-30px) scale(1); opacity: 0; }
+  }
+
+  /* — NOTIFICATIONS — */
+  #toast {
+    position: fixed; bottom: 30px; right: 30px; z-index: 9998;
+    background: var(--surface); border: 1px solid var(--cyan);
+    border-radius: 10px; padding: 14px 20px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--cyan);
+    box-shadow: 0 0 30px rgba(0,200,255,0.2);
+    transform: translateY(20px); opacity: 0;
+    transition: all 0.3s; pointer-events: none;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
 </style>
 </head>
 <body>
+<div class="grid-bg"></div>
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
 
 <!-- HEADER -->
 <header>
-  <div class="header-inner">
-    <div class="logo">
-      <div class="logo-icon">⬡</div>
-      <div class="logo-text">POLICE <span>CASE</span> MATCHING</div>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
     </div>
-    <div class="status-bar">
-      <div class="status-dot"><div class="dot"></div> SYSTEM ONLINE</div>
-      <div class="status-dot" id="clock">00:00:00</div>
+    <div>
+      <div class="logo-text">POLICE CASE MATCHING</div>
+      <div class="logo-sub">ML-POWERED OFFICER DISPATCH SYSTEM v2.1</div>
     </div>
+  </div>
+  <div class="header-status">
+    <div class="status-pill"><span class="status-dot"></span> SYSTEM ONLINE</div>
+    <div class="status-pill" id="clock">00:00:00</div>
+    <div class="status-pill">ML ENGINE: LOGISTIC REGRESSION</div>
   </div>
 </header>
 
-<!-- MAIN -->
-<div class="wrapper">
-
-  <!-- LEFT: INPUT FORM -->
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-icon">📋</span>
-      <h2>Case Input</h2>
+<!-- TEAM BANNER -->
+<div class="team-banner" id="teamBanner">
+  <div class="team-center">
+    <div class="team-label-block">
+      <div class="team-eyebrow">developed by team</div>
+      <div class="team-name-display">CLEMENTINE</div>
     </div>
-    <div class="form-body">
-
-      <div class="field">
-        <label>Case Type</label>
-        <div class="select-wrap">
-          <select id="caseType">
-            <option value="">— Select Crime Type —</option>
-            <option value="Robbery">Robbery</option>
-            <option value="Homicide">Homicide</option>
-            <option value="Cybercrime">Cybercrime</option>
-            <option value="Fraud">Fraud</option>
-            <option value="Drug Dealing">Drug Dealing</option>
-            <option value="Assault">Assault</option>
-            <option value="Kidnapping">Kidnapping</option>
-            <option value="Burglary">Burglary</option>
-          </select>
-        </div>
+    <div class="team-divider"></div>
+    <div class="team-members">
+      <div class="member-chip c1">
+        <div class="member-avatar">KZ</div>
+        <div class="member-name">Kazi Zarin Tasnim</div>
       </div>
-
-      <div class="field">
-        <label>Location</label>
-        <div class="select-wrap">
-          <select id="location">
-            <option value="">— Select Location —</option>
-            <option value="North">North</option>
-            <option value="South">South</option>
-            <option value="East">East</option>
-            <option value="West">West</option>
-            <option value="Downtown">Downtown</option>
-            <option value="Suburban">Suburban</option>
-          </select>
-        </div>
+      <div class="member-chip c2">
+        <div class="member-avatar">MT</div>
+        <div class="member-name">Montakim Talukder</div>
       </div>
-
-      <div class="field">
-        <label>Priority Level</label>
-        <div class="priority-grid">
-          <button class="priority-btn low"      data-val="Low"      onclick="setPriority(this)">Low</button>
-          <button class="priority-btn medium"   data-val="Medium"   onclick="setPriority(this)">Medium</button>
-          <button class="priority-btn high"     data-val="High"     onclick="setPriority(this)">High</button>
-          <button class="priority-btn critical" data-val="Critical" onclick="setPriority(this)">⚠ Critical</button>
-        </div>
-        <input type="hidden" id="priority" value=""/>
+      <div class="member-chip c3">
+        <div class="member-avatar">NS</div>
+        <div class="member-name">Nafish Salehin</div>
       </div>
+    </div>
+  </div>
+</div>
 
-      <div class="field">
-        <label>Number of Officers to Recommend</label>
-        <div class="select-wrap">
-          <select id="topN">
-            <option value="3">Top 3</option>
-            <option value="5" selected>Top 5</option>
-            <option value="10">Top 10</option>
-          </select>
-        </div>
-      </div>
+<!-- APP -->
+<div class="app">
 
-      <div class="error-msg" id="errorMsg">⚠ Please fill in all fields before searching.</div>
-
-      <button class="btn-submit" id="submitBtn" onclick="findOfficers()">
-        ▶ FIND BEST OFFICERS
-      </button>
-
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-card" style="--accent-color: var(--cyan)">
+      <div class="stat-label">Active Officers</div>
+      <div class="stat-value">87</div>
+      <div class="stat-change">↑ 4 on duty today</div>
+      <div class="stat-icon">👮</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--amber)">
+      <div class="stat-label">Open Cases</div>
+      <div class="stat-value">142</div>
+      <div class="stat-change">↑ 12 new this week</div>
+      <div class="stat-icon">📂</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--green)">
+      <div class="stat-label">Solved This Month</div>
+      <div class="stat-value">218</div>
+      <div class="stat-change">↑ 92% success rate</div>
+      <div class="stat-icon">✓</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--red)">
+      <div class="stat-label">Critical Cases</div>
+      <div class="stat-value">9</div>
+      <div class="stat-change">↓ 3 resolved today</div>
+      <div class="stat-icon">⚠</div>
     </div>
   </div>
 
-  <!-- RIGHT: STATS + RESULTS -->
-  <div class="right-col">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
 
-    <!-- STATS -->
-    <div class="stats-row">
-      <div class="stat-card c1">
-        <div class="stat-label">Total Officers</div>
-        <div class="stat-value">100</div>
+    <!-- NEW CASE FORM -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">// New Case Input</span>
+        <span class="tag">DISPATCH</span>
       </div>
-      <div class="stat-card c2">
-        <div class="stat-label">Available Now</div>
-        <div class="stat-value" id="availCount">—</div>
-      </div>
-      <div class="stat-card c3">
-        <div class="stat-label">Total Cases</div>
-        <div class="stat-value">500</div>
-      </div>
-      <div class="stat-card c4">
-        <div class="stat-label">Best Model</div>
-        <div class="stat-value" style="font-size:1rem; padding-top:6px; color: var(--accent2);">LOG REG</div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Case ID</label>
+          <input class="form-input" id="caseId" value="CASE-2026-0847" placeholder="Auto-generated">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Crime Type</label>
+          <select class="form-select" id="crimeType">
+            <option value="robbery">Robbery</option>
+            <option value="homicide">Homicide</option>
+            <option value="fraud">Cyber Fraud</option>
+            <option value="assault">Assault</option>
+            <option value="narcotics">Narcotics</option>
+            <option value="kidnapping">Kidnapping</option>
+            <option value="burglary">Burglary</option>
+            <option value="cybercrime">Cybercrime</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location / Region</label>
+          <select class="form-select" id="region">
+            <option>Downtown</option>
+            <option>North</option>
+            <option>South</option>
+            <option>East</option>
+            <option>West</option>
+            <option>Harbor</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Urgency Level</label>
+          <select class="form-select" id="urgency">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🔴 High</option>
+            <option value="critical">⚡ Critical</option>
+          </select>
+        </div>
+
+
+
+        <button class="match-btn" onclick="runMatching()" id="matchBtn">
+          <span id="matchBtnText">⚡ FIND BEST OFFICERS</span>
+        </button>
       </div>
     </div>
 
-    <!-- RESULTS -->
-    <div class="panel results-panel">
-      <div class="panel-header">
-        <span class="panel-icon">🏆</span>
-        <h2>Recommended Officers</h2>
+    <!-- ML MODEL CARD -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">// ML Model</span>
+        <span class="tag">ACTIVE</span>
       </div>
-      <div class="results-body">
+      <div class="model-selector">
+        <button class="model-btn active" disabled>Logistic Regression</button>
+      </div>
+    </div>
 
-        <div class="placeholder" id="placeholder">
-          <div class="placeholder-icon">👮</div>
-          <p>AWAITING CASE INPUT</p>
-          <p style="opacity:0.5; margin-top:4px;">Enter case details to find the best matching officers</p>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- RESULTS -->
+    <div class="card" style="flex:1">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('results',this)">Matched Officers</div>
+        <div class="tab" onclick="switchTab('cases',this)">Active Cases</div>
+        <div class="tab" onclick="switchTab('analytics',this)">Analytics</div>
+      </div>
+
+      <!-- TAB: RESULTS -->
+      <div class="tab-content active" id="tab-results">
+        <div class="results-header">
+          <div>
+            <div style="font-size:16px;font-weight:700" id="resultCaseName">Awaiting Case Input</div>
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:3px" id="resultMeta">Enter case details and click FIND BEST OFFICERS</div>
+          </div>
+          <div class="results-meta" id="resultTags"></div>
         </div>
-
-        <div class="loading" id="loading">
-          <div class="spinner"></div>
-          <p>ANALYZING OFFICER PROFILES...</p>
+        <div id="officerList">
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-text">NO QUERY SUBMITTED<br>Configure case parameters and run matching</div>
+          </div>
         </div>
+      </div>
 
-        <div class="results-list" id="resultsList"></div>
+      <!-- TAB: CASES -->
+      <div class="tab-content" id="tab-cases">
+        <div style="padding:20px 24px;overflow-x:auto">
+          <table class="cases-table">
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Type</th>
+                <th>Region</th>
+                <th>Assigned Officer</th>
+                <th>Status</th>
+                <th>Complexity</th>
+                <th>Date Filed</th>
+              </tr>
+            </thead>
+            <tbody id="casesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
 
+      <!-- TAB: ANALYTICS -->
+      <div class="tab-content" id="tab-analytics">
+        <div style="padding:24px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px">CASE RESOLUTION BY CRIME TYPE (30 DAYS)</div>
+          <div class="chart-bars" id="analyticsChart"></div>
+          <div class="chart-axis" id="analyticsAxis"></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px">
+            <div class="metric-item">
+              <div class="metric-name">Avg Match Score</div>
+              <div class="metric-value cyan">87.4</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-name">Avg Response Time</div>
+              <div class="metric-value amber">4.2 min</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-name">Officer Utilization</div>
+              <div class="metric-value green">74%</div>
+            </div>
+          </div>
+          <div style="margin-top:24px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px">TOP PERFORMING OFFICERS</div>
+          <div id="topOfficers" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer>
-  <p>POLICE OFFICER-TO-CASE MATCHING ML SYSTEM &nbsp;|&nbsp; <span>IIT — University of Dhaka</span> &nbsp;|&nbsp; Logistic Regression · Random Forest · Gradient Boosting</p>
-</footer>
+<div id="toast"></div>
 
 <script>
-  // ── CLOCK ──
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('clock').textContent =
-      now.toTimeString().slice(0,8);
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
+// ── DATA ──
+const officersDB = [
+  { id:'OFF0045', name:'Det. Sarah Reyes', exp:18, rate:0.92, region:'Downtown', avail:true, cases:3, units:['Forensics','Negotiation','Homicide'], lang:['English','Spanish'], badge:'SR' },
+  { id:'OFF0023', name:'Sgt. James Okafor', exp:15, rate:0.88, region:'North', avail:true, cases:2, units:['Narcotics','Undercover','SWAT'], lang:['English'], badge:'JO' },
+  { id:'OFF0078', name:'Insp. Lin Wei', exp:20, rate:0.90, region:'East', avail:false, cases:5, units:['Cyber','Forensics','Financial'], lang:['English','Mandarin'], badge:'LW' },
+  { id:'OFF0031', name:'Det. Mariam Hasan', exp:12, rate:0.85, region:'South', avail:true, cases:1, units:['Negotiation','SWAT'], lang:['English','Arabic'], badge:'MH' },
+  { id:'OFF0056', name:'Sgt. Tanvir Ahmed', exp:14, rate:0.82, region:'Harbor', avail:true, cases:4, units:['Narcotics','Undercover'], lang:['English','Bengali'], badge:'TA' },
+  { id:'OFF0012', name:'Lt. Daniel Park', exp:22, rate:0.95, region:'Downtown', avail:true, cases:2, units:['Forensics','SWAT','Negotiation'], lang:['English'], badge:'DP' },
+  { id:'OFF0089', name:'Det. Priya Nair', exp:9, rate:0.78, region:'West', avail:true, cases:3, units:['Cyber','Financial'], lang:['English'], badge:'PN' },
+];
 
-  // ── PRIORITY SELECTION ──
-  let selectedPriority = '';
-  function setPriority(btn) {
-    document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedPriority = btn.dataset.val;
-    document.getElementById('priority').value = selectedPriority;
-  }
+const casesDB = [
+  { id:'CASE-0823', type:'Robbery', region:'Downtown', officer:'Det. Sarah Reyes', status:'active', complexity:7, date:'2026-02-20' },
+  { id:'CASE-0824', type:'Homicide', region:'North', officer:'Sgt. James Okafor', status:'open', complexity:9, date:'2026-02-22' },
+  { id:'CASE-0825', type:'Cyber Fraud', region:'East', officer:'Insp. Lin Wei', status:'active', complexity:6, date:'2026-02-24' },
+  { id:'CASE-0826', type:'Assault', region:'South', officer:'Unassigned', status:'critical', complexity:8, date:'2026-02-25' },
+  { id:'CASE-0827', type:'Narcotics', region:'Harbor', officer:'Sgt. Tanvir Ahmed', status:'solved', complexity:5, date:'2026-02-18' },
+  { id:'CASE-0828', type:'Burglary', region:'West', officer:'Det. Priya Nair', status:'open', complexity:4, date:'2026-02-26' },
+  { id:'CASE-0829', type:'Kidnapping', region:'Downtown', officer:'Lt. Daniel Park', status:'critical', complexity:10, date:'2026-02-26' },
+  { id:'CASE-0830', type:'Fraud', region:'North', officer:'Det. Mariam Hasan', status:'solved', complexity:3, date:'2026-02-19' },
+];
 
-  // ── MOCK OFFICER DATA (simulates ML backend output) ──
-  const officerPool = [
-    { id:'OFF0063', exp:29, rate:0.95, region:'North',    units:'Homicide|Gang Division|Narcotics',      available:true,  cases:3  },
-    { id:'OFF0002', exp:26, rate:0.95, region:'South',    units:'General Patrol|Fraud Investigation',    available:true,  cases:10 },
-    { id:'OFF0045', exp:22, rate:0.92, region:'Downtown', units:'Cyber|Homicide|Gang Division',          available:true,  cases:5  },
-    { id:'OFF0081', exp:18, rate:0.89, region:'North',    units:'General Patrol|Narcotics',              available:true,  cases:7  },
-    { id:'OFF0023', exp:15, rate:0.88, region:'South',    units:'Gang Division|Fraud Investigation',     available:true,  cases:12 },
-    { id:'OFF0078', exp:20, rate:0.90, region:'Downtown', units:'Homicide|Cyber',                        available:false, cases:18 },
-    { id:'OFF0031', exp:12, rate:0.85, region:'Suburban', units:'General Patrol|Gang Division',          available:true,  cases:4  },
-    { id:'OFF0056', exp:14, rate:0.82, region:'West',     units:'Narcotics|Drug Division',               available:true,  cases:8  },
-    { id:'OFF0019', exp:25, rate:0.91, region:'East',     units:'Homicide|Gang Division|Cyber',          available:true,  cases:6  },
-    { id:'OFF0007', exp:17, rate:0.87, region:'North',    units:'General Patrol|Narcotics|Fraud',        available:false, cases:19 },
-    { id:'OFF0034', exp:10, rate:0.79, region:'South',    units:'General Patrol',                        available:true,  cases:2  },
-    { id:'OFF0092', exp:28, rate:0.93, region:'Downtown', units:'Homicide|Gang Division',                available:true,  cases:9  },
-    { id:'OFF0011', exp:8,  rate:0.74, region:'Suburban', units:'General Patrol|Patrol',                 available:true,  cases:1  },
-    { id:'OFF0067', exp:21, rate:0.88, region:'West',     units:'Fraud Investigation|Cyber',             available:true,  cases:11 },
-    { id:'OFF0055', exp:16, rate:0.86, region:'East',     units:'Drug Division|Narcotics',               available:true,  cases:5  },
-  ];
+const analyticsData = [
+  { label:'Robbery', val:85 },
+  { label:'Homicide', val:60 },
+  { label:'Fraud', val:90 },
+  { label:'Assault', val:72 },
+  { label:'Narcotics', val:78 },
+  { label:'Cybercrime', val:65 },
+];
 
-  // ── PRIORITY → COMPLEXITY ──
-  const priorityMap = { Low: 2, Medium: 5, High: 8, Critical: 10 };
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toTimeString().slice(0,8);
+}
+setInterval(updateClock, 1000); updateClock();
 
-  // ── COMPATIBILITY SCORING ──
-  function scoreOfficer(officer, caseType, location, priority) {
-    const complexity = priorityMap[priority] || 5;
-    let score = 0;
+// ── TABS ──
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='cases') renderCasesTable();
+  if(name==='analytics') renderAnalytics();
+}
 
-    score += officer.exp * 1.8;
-    score += officer.rate * 45;
+// ── BADGE TOGGLE ──
+function toggleBadge(el) {
+  el.classList.toggle('active');
+  el.classList.toggle('inactive');
+}
 
-    // location match
-    if (officer.region.toLowerCase() === location.toLowerCase()) score += 22;
 
-    // specialization match
-    const unitLower = officer.units.toLowerCase();
-    const typeLower = caseType.toLowerCase();
-    if (unitLower.includes(typeLower) ||
-        (typeLower === 'homicide'    && unitLower.includes('homicide')) ||
-        (typeLower === 'robbery'     && (unitLower.includes('general') || unitLower.includes('gang'))) ||
-        (typeLower === 'cybercrime'  && unitLower.includes('cyber')) ||
-        (typeLower === 'fraud'       && unitLower.includes('fraud')) ||
-        (typeLower === 'drug dealing'&& (unitLower.includes('narc') || unitLower.includes('drug'))) ||
-        (typeLower === 'assault'     && unitLower.includes('general')) ||
-        (typeLower === 'kidnapping'  && unitLower.includes('homicide')) ||
-        (typeLower === 'burglary'    && unitLower.includes('general'))) {
-      score += 20;
-    }
+// ── MATCHING (Logistic Regression) ──
+// LR uses a linear combination of standardised features with fixed learned weights
+function computeScore(officer, crimeType, region, urgency) {
+  const urgencyWeight = { low: 0, medium: 1, high: 2, critical: 3 };
 
-    // availability
-    if (officer.available) score += 14;
+  // Linear weighted features (simulating LR coefficients)
+  let score = 0;
+  score += (officer.exp / 25) * 20;            // w1: experience (normalised)
+  score += officer.rate * 30;                  // w2: success rate (strongest predictor in LR)
+  score += officer.region.toLowerCase() === region.toLowerCase() ? 18 : 4; // w3: region
+  score += officer.avail ? 12 : 0;             // w4: availability
+  score += Math.max(0, (6 - officer.cases)) * 2; // w5: workload (inverted)
+  score += (urgencyWeight[urgency] || 1) * 1.5; // w6: urgency match weight
 
-    // workload penalty
-    score -= officer.cases * 1.5;
+  // LR applies sigmoid — simulate slight probability compression near extremes
+  const sigmoid = x => 100 / (1 + Math.exp(-0.05 * (x - 50)));
+  score = sigmoid(score);
 
-    // complexity bonus for experienced officers
-    score += (officer.exp / 30) * complexity;
+  // Small noise (LR has less variance than ensemble methods)
+  return Math.min(99.9, score + (Math.random() * 2 - 1));
+}
 
-    return Math.min(Math.max(Math.round(score * 10) / 10, 0), 100);
-  }
+function runMatching() {
+  const btn = document.getElementById('matchBtn');
+  const btnText = document.getElementById('matchBtnText');
+  btn.classList.add('loading');
+  btnText.innerHTML = '<span class="loading-ring"></span> RUNNING ML ENGINE...';
 
-  // update available count
-  const availableOfficers = officerPool.filter(o => o.available).length;
-  document.getElementById('availCount').textContent = availableOfficers;
+  const crimeType = document.getElementById('crimeType').value;
+  const region = document.getElementById('region').value;
+  const urgency = document.getElementById('urgency').value;
+  const caseId = document.getElementById('caseId').value;
 
-  // ── FIND OFFICERS ──
-  function findOfficers() {
-    const caseType = document.getElementById('caseType').value;
-    const location = document.getElementById('location').value;
-    const priority = selectedPriority;
-    const topN     = parseInt(document.getElementById('topN').value);
-    const errEl    = document.getElementById('errorMsg');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    btnText.innerHTML = '⚡ FIND BEST OFFICERS';
 
-    if (!caseType || !location || !priority) {
-      errEl.classList.add('active');
-      return;
-    }
-    errEl.classList.remove('active');
+    const scored = officersDB.map(o => ({
+      ...o, score: computeScore(o, crimeType, region, urgency)
+    })).sort((a,b) => b.score - a.score);
 
-    // show loading
-    document.getElementById('placeholder').style.display = 'none';
-    document.getElementById('resultsList').classList.remove('active');
-    document.getElementById('loading').classList.add('active');
+    renderResults(scored, caseId, crimeType, urgency, region);
+    showToast('Matching complete — ' + scored.length + ' officers evaluated');
+  }, 1800);
+}
 
-    // simulate ML processing delay
-    setTimeout(() => {
-      const scored = officerPool.map(o => ({
-        ...o,
-        score: scoreOfficer(o, caseType, location, priority)
-      }));
+function renderResults(officers, caseId, crimeType, urgency, region) {
+  const urgencyColors = { low:'tag', medium:'tag amber', high:'tag urgent', critical:'tag urgent' };
 
-      scored.sort((a, b) => b.score - a.score);
-      const top = scored.slice(0, topN);
+  document.getElementById('resultCaseName').textContent = `${caseId} — ${crimeType.charAt(0).toUpperCase()+crimeType.slice(1)}`;
+  document.getElementById('resultMeta').textContent = `Region: ${region} · ${officers.length} officers evaluated`;
+  document.getElementById('resultTags').innerHTML = `
+    <span class="tag">${region.toUpperCase()}</span>
+    <span class="${urgencyColors[urgency] || 'tag'}">${urgency.toUpperCase()}</span>
+  `;
 
-      renderResults(top, caseType, location, priority);
-
-      document.getElementById('loading').classList.remove('active');
-      document.getElementById('resultsList').classList.add('active');
-    }, 1400);
-  }
-
-  function renderResults(officers, caseType, location, priority) {
-    const list = document.getElementById('resultsList');
-    const complexity = priorityMap[priority];
-
-    const priorityColor = {
-      Low: 'var(--green)', Medium: 'var(--warn)',
-      High: 'var(--accent2)', Critical: 'var(--red)'
-    }[priority];
-
-    list.innerHTML = `
-      <div class="case-badge">
-        <span>CASE TYPE</span> ${caseType}
-        &nbsp;&nbsp;<span>LOCATION</span> ${location}
-        &nbsp;&nbsp;<span>PRIORITY</span> <span style="color:${priorityColor}">${priority}</span>
-        &nbsp;&nbsp;<span>COMPLEXITY</span> ${complexity}/10
-      </div>
-    `;
-
-    officers.forEach((officer, i) => {
-      const scoreClass = officer.score >= 75 ? 'score-high' : officer.score >= 55 ? 'score-medium' : 'score-low';
-      const barClass   = officer.score >= 75 ? 'score-high-bar' : officer.score >= 55 ? 'score-medium-bar' : 'score-low-bar';
-      const availHtml  = officer.available
-        ? '<span class="avail-badge avail-yes">AVAILABLE</span>'
-        : '<span class="avail-badge avail-no">BUSY</span>';
-
-      list.innerHTML += `
-        <div class="officer-card">
-          <div class="officer-rank rank-${i+1}">${i+1}</div>
-          <div class="officer-info">
-            <div class="officer-id">${officer.id} ${availHtml}</div>
-            <div class="officer-meta">
-              <div class="meta-tag">EXP <strong>${officer.exp} yrs</strong></div>
-              <div class="meta-tag">SUCCESS <strong>${Math.round(officer.rate*100)}%</strong></div>
-              <div class="meta-tag">REGION <strong>${officer.region}</strong></div>
-              <div class="meta-tag">CASES <strong>${officer.cases} active</strong></div>
-            </div>
+  const html = officers.slice(0,5).map((o, i) => {
+    const isTop = i === 0;
+    const scoreInt = Math.round(o.score);
+    const barPct = o.score.toFixed(1);
+    const availTag = o.avail ? `<span class="skill-tag" style="color:var(--green);border-color:rgba(0,229,160,0.3)">AVAILABLE</span>` : `<span class="skill-tag" style="color:var(--red);border-color:rgba(255,60,90,0.3)">BUSY</span>`;
+    const skillTags = o.units.slice(0,3).map(u => `<span class="skill-tag">${u}</span>`).join('');
+    return `
+      <div class="officer-card ${isTop ? 'rank-1':''}" onclick="selectOfficer('${o.id}', '${o.name}')">
+        <div class="officer-avatar">
+          ${o.badge}
+          <div class="rank-badge">${i+1}</div>
+        </div>
+        <div class="officer-info">
+          <div class="officer-name">${o.name}</div>
+          <div class="officer-meta">
+            <span>🏅 ${o.exp} yrs exp</span>
+            <span>📍 ${o.region}</span>
+            <span>📋 ${o.cases} active</span>
           </div>
-          <div class="officer-score-wrap">
-            <div class="score-label">MATCH SCORE</div>
-            <div class="score-value ${scoreClass}">${officer.score}</div>
-            <div class="score-bar-wrap">
-              <div class="score-bar ${barClass}" style="width:${officer.score}%"></div>
+          <div class="officer-tags">
+            ${availTag}
+            ${skillTags}
+          </div>
+          <div class="score-bar-wrap" style="margin-top:10px">
+            <div class="score-bar-track">
+              <div class="score-bar-fill ${isTop?'top':''}" style="width:${barPct}%"></div>
             </div>
           </div>
         </div>
-      `;
-    });
+        <div class="officer-score">
+          <div class="score-number ${isTop?'high':''}">${scoreInt}</div>
+          <div class="score-label">MATCH SCORE</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:4px">${(o.rate*100).toFixed(0)}% SUCCESS</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('officerList').innerHTML = `<div class="officer-list">${html}</div>`;
+}
+
+function selectOfficer(id, name) {
+  showToast(`${name} (${id}) assigned to case`);
+}
+
+// ── CASES TABLE ──
+function renderCasesTable() {
+  const statusMap = { open:'open', active:'active', solved:'solved', critical:'critical' };
+  const html = casesDB.map(c => `
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--cyan);font-size:11px">${c.id}</span></td>
+      <td>${c.type}</td>
+      <td>${c.region}</td>
+      <td>${c.officer}</td>
+      <td><span class="case-status ${statusMap[c.status]}">${c.status.toUpperCase()}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:3px;background:var(--border);border-radius:2px">
+            <div style="height:100%;border-radius:2px;background:var(--cyan);width:${c.complexity*10}%"></div>
+          </div>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">${c.complexity}/10</span>
+        </div>
+      </td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">${c.date}</td>
+    </tr>
+  `).join('');
+  document.getElementById('casesTableBody').innerHTML = html;
+}
+
+// ── ANALYTICS ──
+function renderAnalytics() {
+  const maxVal = Math.max(...analyticsData.map(d => d.val));
+  document.getElementById('analyticsChart').innerHTML = analyticsData.map((d,i) => `
+    <div class="chart-bar ${d.val >= 80 ? 'good' : ''}" style="height:${(d.val/maxVal)*100}%;animation-delay:${i*0.1}s;${d.val>=80?'background:rgba(0,229,160,0.2);border-color:rgba(0,229,160,0.4)':''}"></div>
+  `).join('');
+  document.getElementById('analyticsAxis').innerHTML = analyticsData.map(d => `<span>${d.label}</span>`).join('');
+
+  const top = [...officersDB].sort((a,b) => b.rate - a.rate).slice(0,3);
+  document.getElementById('topOfficers').innerHTML = top.map(o => `
+    <div style="display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+      <div class="officer-avatar" style="width:40px;height:40px;font-size:13px;flex-shrink:0">${o.badge}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">${o.name}</div>
+        <div style="height:4px;background:var(--border);border-radius:2px">
+          <div style="height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),#5040ff);width:${o.rate*100}%"></div>
+        </div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--green)">${(o.rate*100).toFixed(0)}%</div>
+    </div>
+  `).join('');
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '▶ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Auto-generate case ID
+function updateCaseId() {
+  const n = Math.floor(Math.random()*9000)+1000;
+  document.getElementById('caseId').value = `CASE-2026-${n}`;
+}
+updateCaseId();
+
+// ── TEAM BANNER PARTICLES ──
+(function spawnParticles() {
+  const banner = document.getElementById('teamBanner');
+  const colors = ['#ff5078','#ffb800','#00c8ff','#a78bfa','#00e5a0'];
+  for(let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 4 + 2;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*3+2}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    banner.appendChild(p);
   }
-
-  // allow Enter key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') findOfficers();
-  });
+})();
 </script>
-
 </body>
 </html>
